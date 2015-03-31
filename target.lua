@@ -33,12 +33,12 @@ function Target:new(targetScene, word, font, body)
   target.fixture:setUserData(target)
 
   local ps = gfx.newParticleSystem(fireImg, 32)
-  ps:setColors({255, 128, 32, 255}, {222, 128, 64, 255}, {128, 32, 32, 32}, {90, 12, 12, 92}, {32, 32, 32, 0})
+  ps:setColors({255, 128, 32, 255}, {222, 128, 32, 255}, {128, 32, 32, 32}, {90, 12, 12, 92}, {32, 32, 32, 0})
   ps:setDirection(math.rad(90))
   ps:setEmissionRate(500)
   ps:setEmitterLifetime(-1)
   ps:setInsertMode("bottom")
-  ps:setLinearAcceleration(0, 0, 0, -800)
+  ps:setLinearAcceleration(0, 0, 0, -200)
   ps:setParticleLifetime(1, 3)
   ps:setRadialAcceleration(0, 0)
   ps:setRotation(0, math.rad(360))
@@ -69,21 +69,21 @@ function Target:draw()
   local screenWidth, screenHeight = gfx.getWidth(), gfx.getHeight()
 
   local x, y = self.body:getWorldPoint(-self.textWidth/2, -self.textHeight/2)
-
+  logInfo("%s at %f,%f", self.word.spell, x, y)
   if self.frame >= 5 then
-    gfx.draw(self.particleSystem, self.body:getWorldPoint(-self.textWidth/4,-self.textHeight/2), 0)
+    gfx.draw(self.particleSystem, self.body:getWorldPoint(-self.textWidth/4,-self.textHeight/2))
   end
   if self.frame >= 4 then
-    gfx.draw(self.particleSystem, self.body:getWorldPoint(self.textWidth/4,-self.textHeight/2), 0)
+    gfx.draw(self.particleSystem, self.body:getWorldPoint(self.textWidth/4,-self.textHeight/2))
   end
   if self.frame >= 3 then
-    gfx.draw(self.particleSystem, self.body:getWorldPoint(-self.textWidth/2,-self.textHeight/2), 0)
+    gfx.draw(self.particleSystem, self.body:getWorldPoint(-self.textWidth/2,-self.textHeight/2))
   end
   if self.frame >= 2 then
-    gfx.draw(self.particleSystem, self.body:getWorldPoint(self.textWidth/2,-self.textHeight/2), 0)
+    gfx.draw(self.particleSystem, self.body:getWorldPoint(self.textWidth/2,-self.textHeight/2))
   end
   if self.frame >= 1 then
-    gfx.draw(self.particleSystem, self.body:getWorldPoint(0,-self.textHeight/2), 0)
+    gfx.draw(self.particleSystem, self.body:getWorldPoint(0,-self.textHeight/2))
   end
 
   -- draw the bounding box
