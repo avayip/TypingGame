@@ -9,14 +9,20 @@ function logErr(fmt,...)
 	print("ERR:"..fmt:format(...))
 end
 
+gfx = love.graphics
+phys = love.physics
+audio = love.audio
+
 utf8 = require("utf8")
 scene = require("scene")
 
+-- buffer for holding current player typed text
 local input = ""
 
 function love.load(arg)
   math.randomseed(os.time())
   love.keyboard.setKeyRepeat(true)
+
   scene:load()
 end
 
@@ -25,11 +31,13 @@ function love.update(dt)
 end
 
 function love.draw()
-  local screenWidth, screenHeight = love.graphics.getWidth(), love.graphics.getHeight()
+  local screenWidth, screenHeight = gfx.getWidth(), gfx.getHeight()
 
   scene:draw()
-  love.graphics.setColor(255, 255, 255)
-  love.graphics.printf(input, 20, screenHeight - 30, screenWidth)
+
+  gfx.setColor(255, 255, 255)
+  gfx.setFont(scene.defaultFont)
+  gfx.printf(input, 20, screenHeight - 30, screenWidth)
 end
 
 function love.textinput(t)
