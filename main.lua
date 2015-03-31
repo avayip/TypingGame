@@ -2,6 +2,13 @@
 Authors: Shing Yip, Ava Yip, Natalie Yip
 ]]
 
+function logInfo(fmt,...)
+	print("INFO:"..fmt:format(...))
+end
+function logErr(fmt,...)
+	print("ERR:"..fmt:format(...))
+end
+
 utf8 = require("utf8")
 scene = require("scene")
 
@@ -9,7 +16,7 @@ local input = ""
 
 function love.load(arg)
   math.randomseed(os.time())
-  love.keyboard.setKeyRepeat(true)  
+  love.keyboard.setKeyRepeat(true)
   scene:load()
 end
 
