@@ -12,24 +12,24 @@ local scene = {
   score = 0,
   dictionary = {},
   levels = {
-    { name = "Level 1",
-      themeMusic = love.audio.newSource("sound/mvrasseli_play_the_game_0.mp3"),
+    { name = "Level 1", 
+      themeMusic = love.audio.newSource("sound/Spiritual_Moments.mp3"),
       background = love.graphics.newImage("graphics/background_1.jpg"),
       wordCount = {min=3, max=5},
       speed = {min=1, max=5},
       dropInterval = 3,
-      levelUpTarget = 2
-    },
-    { name = "Level 2",
-      themeMusic = love.audio.newSource("sound/epic_loop.mp3"),
+      levelUpTarget = 5 
+    },  
+    { name = "Level 2", 
+      themeMusic = love.audio.newSource("sound/mvrasseli_play_the_game_0.mp3"),
       background = love.graphics.newImage("graphics/background_1.jpg"),
       wordCount = {min=5, max=7},
       speed = {min=3, max=8},
       dropInterval = 2,
-      levelUpTarget = 5
-    },
-    { name = "Level 4",
-      themeMusic = love.audio.newSource("sound/Spiritual_Moments.mp3"),
+      levelUpTarget = 12
+    },  
+    { name = "Level 4", 
+      themeMusic = love.audio.newSource("sound/epic_loop.mp3"),
       background = love.graphics.newImage("graphics/background_1.jpg"),
       wordCount = {min=7, max=14},
       speed = {min=5, max=12},
@@ -39,10 +39,10 @@ local scene = {
     { name = "Level 5",
       themeMusic = love.audio.newSource("sound/Preliminary_Music.mp3"),
       background = love.graphics.newImage("graphics/background_1.jpg"),
-      wordCount = {min=10, max=20},
-      speed = {min=7, max=14},
-      dropIntervel = 0.5,
-      levelUpTarget = 35
+      wordCount = {min=10, max=20}, 
+      speed = {min=7, max=14}, 
+      dropInterval = 0.5,
+      levelUpTarget = 35 
     },
     { name = "Level 6",
       themeMusic = love.audio.newSource("sound/Spiritual_Moments.mp3"),
@@ -60,10 +60,6 @@ local scene = {
       dropInterval = 0.5,
       levelUpTarget = -1
     },
-  },
-  gameOver = {
-    font = love.graphics.newFont(40),
-    music = love.audio.newSource("sound/Target_position.mp3")
   },
   level = nil,
   nextDrop = 1,
@@ -113,7 +109,7 @@ function scene:load()
   self.ground.body = love.physics.newBody(self.world, screenWidth/2, screenHeight-20)
   self.ground.shape = love.physics.newRectangleShape(screenWidth, 40)
   self.ground.fixture = love.physics.newFixture(self.ground.body, self.ground.shape)
-  self.ground.fixture:setUserData("ground")
+  self.ground.fixture:setUserData("[[ground]]")
 
   self.leftWall.body = love.physics.newBody(self.world, 1, screenHeight/2)
   self.leftWall.shape = love.physics.newRectangleShape(2, screenHeight)
@@ -127,6 +123,13 @@ end
 function scene:update(dt, input)
   self.world:update(dt)
 
+  if self.gameOver then
+    for index, target in ipairs(self.targets) do
+      target:update(dt, input)
+    end
+    return
+  end
+  
   if #self.targets < self.level.wordCount.min then
     self:addTarget()
   end
@@ -149,6 +152,9 @@ function scene:update(dt, input)
       target:destroy()
       -- insert index to end of disappearedTargets, note that index is in accending order
       table.insert(disappearedTargets, index)
+    elseif target.fuseBurn > (target.fuseLength + 3) then
+      self:onGameOver()
+      return
     end
   end
 
@@ -184,6 +190,7 @@ function scene:onScored(target)
 end
 
 function scene:onLevelUp()
+  self.level.themeMusic:stop()
   self.audio.levelUp:play()
 end
 
@@ -243,8 +250,10 @@ function scene:draw()
   love.graphics.setColor(250, 108, 7)
   love.graphics.printf(self.level.name, screenWidth - 120, screenHeight - 40, 100, "right")
   love.graphics.printf("Score:"..self.score, screenWidth - 120, screenHeight - 20, 100, "right")
-
-
+  
+  if self.gameOver then
+    self.gameOver:draw()
+  end
   -- for debugging : draw all shapes
   --[[
   love.graphics.setColor(255, 255, 255)
@@ -256,8 +265,33 @@ function scene:draw()
   ]]
 end
 
-function scene:onColision(a, b, coll)
+function scene:onGameOver()
+  local music = love.audio.newSource("sound/Target_position.mp3")
+  
+  self.level.themeMusic:stop()
+  music:play()
+  
+  local target = Target:new(
+    self, 
+    {spell = "GAME OVER", hitCount = 0}, 
+    love.graphics.newFont(60),
+    love.physics.newBody(self.world, love.graphics.getWidth()/2, 30, "dynamic"))
 
+  target.flashingFreq = 0
+  self.gameOver = target
 end
+
+function scene.onColision(a, b, contact)
+  local target
+  if a:getUserData() == "[[ground]]" then
+    target = b:getUserData()
+  elseif b:getUserData() == "[[ground]]" then
+    target = a:getUserData()
+  end
+  if target then
+    target:onHitGround()
+  end
+end
+
 
 return scene
