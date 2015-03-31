@@ -4,6 +4,9 @@ Authors: Shing Yip, Ava Yip, Natalie Yip
 
 Target = require("Target")
 
+--[[
+scene table defines game scene
+]]
 local scene = {
   targets = {},
   score = 0,
@@ -12,28 +15,28 @@ local scene = {
     { name = "Level 1", 
       themeMusic = love.audio.newSource("sound/Spiritual_Moments.mp3"),
       background = love.graphics.newImage("graphics/background_1.jpg"),
-      wordCount = {min=3, max=5}, 
-      speed = {min=1, max=5}, 
+      wordCount = {min=3, max=5},
+      speed = {min=1, max=5},
       dropInterval = 3,
       levelUpTarget = 5 
     },  
     { name = "Level 2", 
       themeMusic = love.audio.newSource("sound/mvrasseli_play_the_game_0.mp3"),
       background = love.graphics.newImage("graphics/background_1.jpg"),
-      wordCount = {min=5, max=7}, 
-      speed = {min=3, max=8}, 
+      wordCount = {min=5, max=7},
+      speed = {min=3, max=8},
       dropInterval = 2,
       levelUpTarget = 12
     },  
     { name = "Level 4", 
       themeMusic = love.audio.newSource("sound/epic_loop.mp3"),
       background = love.graphics.newImage("graphics/background_1.jpg"),
-      wordCount = {min=7, max=14}, 
-      speed = {min=5, max=12}, 
+      wordCount = {min=7, max=14},
+      speed = {min=5, max=12},
       dropInterval = 1,
-      levelUpTarget = 20 
+      levelUpTarget = 20
     },
-    { name = "Level 5", 
+    { name = "Level 5",
       themeMusic = love.audio.newSource("sound/Preliminary_Music.mp3"),
       background = love.graphics.newImage("graphics/background_1.jpg"),
       wordCount = {min=10, max=20}, 
@@ -41,21 +44,21 @@ local scene = {
       dropInterval = 0.5,
       levelUpTarget = 35 
     },
-    { name = "Level 6", 
+    { name = "Level 6",
       themeMusic = love.audio.newSource("sound/Spiritual_Moments.mp3"),
       background = love.graphics.newImage("graphics/background_1.jpg"),
-      wordCount = {min=10, max=30}, 
-      speed = {min=10, max=16}, 
+      wordCount = {min=10, max=30},
+      speed = {min=10, max=16},
       dropInterval = 0.5,
-      levelUpTarget = 40 
+      levelUpTarget = 40
     },
-    { name = "Level Hell", 
+    { name = "Level Hell",
       themeMusic = love.audio.newSource("sound/Spiritual_Moments.mp3"),
       background = love.graphics.newImage("graphics/background_1.jpg"),
-      wordCount = {min=10, max=35}, 
-      speed = {min=5, max=20}, 
+      wordCount = {min=10, max=35},
+      speed = {min=5, max=20},
       dropInterval = 0.5,
-      levelUpTarget = -1 
+      levelUpTarget = -1
     },
   },
   level = nil,
@@ -89,13 +92,13 @@ function scene:load()
 
   self.fonts = {
     --love.graphics.newFont("fonts/armybeans.ttf", 60),
-    love.graphics.newFont("fonts/charlie_dotted.ttf", 40),    
-    love.graphics.newFont("fonts/EasterBunny.ttf", 40),    
+    love.graphics.newFont("fonts/charlie_dotted.ttf", 40),
+    love.graphics.newFont("fonts/EasterBunny.ttf", 40),
     love.graphics.newFont("fonts/NORMAL.otf", 25),
     love.graphics.newFont("fonts/melting.ttf", 40),
     love.graphics.newFont("fonts/orange_juice.ttf", 40)
   }
-  
+
   self.world:setCallbacks(self.onColision, nil, nil, nil)
 
   self:setLevel(1)
@@ -131,10 +134,10 @@ function scene:update(dt, input)
     self:addTarget()
   end
 
-  if self.nextDrop > 0.1 then 
+  if self.nextDrop > 0.1 then
     self.nextDrop = self.nextDrop - dt
   end
-  
+
   if #self.targets < self.level.wordCount.max and self.nextDrop <= 0.1 then
     self:addTarget()
     self.nextDrop = self.level.dropInterval
@@ -143,10 +146,10 @@ function scene:update(dt, input)
   local disappearedTargets = {}
   for index, target in ipairs(self.targets) do
     target:update(dt, input)
-    
+
     -- check if target is out of screen and destroy it
     if target.body:getY() < -50 then
-      target:destroy()  
+      target:destroy()
       -- insert index to end of disappearedTargets, note that index is in accending order
       table.insert(disappearedTargets, index)
     elseif target.fuseBurn > (target.fuseLength + 3) then
@@ -154,7 +157,7 @@ function scene:update(dt, input)
       return
     end
   end
-  
+
   -- remove targets from self.targets in reverse order
   for index = #disappearedTargets, 1, -1 do
     table.remove(self.targets, disappearedTargets[index])
@@ -170,7 +173,7 @@ function scene:setLevel(newLevel)
   if newLevel > #self.levels then
     error("cannot set level "..newLevel)
   end
-  
+
   if self.level and self.level.themeMusic then
     self.level.themeMusic:stop()
   end
@@ -192,20 +195,23 @@ function scene:onLevelUp()
 end
 
 function scene:loadDictionary(filename)
-  local dictionaryFile = io.open(filename)
-  if dictionaryFile then
-    for line in dictionaryFile:lines() do
+  print(("loading dictionary from %s"):format(filename))
+  if love.filesystem.exists(filename) then
+    for line in love.filesystem.lines(filename) do
       local word = line:gsub("%s+", "")
       if word and word ~= "" then
         table.insert(self.dictionary, {spell = word:lower(), hitCount = 1})
       end
     end
+  else
+  	error("open dictionary file failed")
   end
+  print(("%d words loaded"):format(#self.dictionary))
 end
 
 function scene:addTarget()
   local words = {
-    self.dictionary[math.random(#self.dictionary)],    
+    self.dictionary[math.random(#self.dictionary)],
     self.dictionary[math.random(#self.dictionary)],
     self.dictionary[math.random(#self.dictionary)],
   }
@@ -222,19 +228,19 @@ function scene:draw()
   else
     love.graphics.setBackgroundColor(155, 183, 242)
   end
-  
+
   for _, target in ipairs(self.targets) do
     target:draw()
   end
 
-  -- draw the ground 
+  -- draw the ground
   --love.graphics.setColor(72, 160, 14)
   --love.graphics.polygon("fill", self.ground.body:getWorldPoints(self.ground.shape:getPoints()))
 
   -- draw the walls
   --love.graphics.polygon("fill", self.leftWall.body:getWorldPoints(self.leftWall.shape:getPoints()))
   --love.graphics.polygon("fill", self.rightWall.body:getWorldPoints(self.rightWall.shape:getPoints()))
- 
+
   -- use default front for other text
   love.graphics.setFont(self.defaultFont)
   -- draw the input
@@ -251,8 +257,8 @@ function scene:draw()
   -- for debugging : draw all shapes
   --[[
   love.graphics.setColor(255, 255, 255)
-  self.world:queryBoundingBox(0, 0, screenWidth, screenHeight, 
-    function(fixture) 
+  self.world:queryBoundingBox(0, 0, screenWidth, screenHeight,
+    function(fixture)
       love.graphics.polygon("line", fixture:getBody():getWorldPoints(fixture:getShape():getPoints()))
     end
   )

@@ -12,6 +12,7 @@ end
 utf8 = require("utf8")
 scene = require("scene")
 
+-- buffer for holding current player typed text
 local input = ""
 
 function love.load(arg)
