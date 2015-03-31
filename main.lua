@@ -5,11 +5,12 @@ Authors: Shing Yip, Ava Yip, Natalie Yip
 utf8 = require("utf8")
 scene = require("scene")
 
+-- buffer for holding current player typed text
 local input = ""
 
 function love.load(arg)
   math.randomseed(os.time())
-  love.keyboard.setKeyRepeat(true)  
+  love.keyboard.setKeyRepeat(true)
   scene:load()
 end
 
