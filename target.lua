@@ -17,8 +17,11 @@ function Target:new(targetScene, word, font, body)
     speed = math.random(targetScene.level.speed.min, targetScene.level.speed.max),
     partialHitLength = 0,
     hitCount = 0,
-    flashingColor = { {0,0,255,255} },
-    flashingFreq = 0.2,
+    flashingColor = {255,255,0,128},
+    flashingFreq = 0.0,
+    flashingTimer = 0.0,
+    flashingDuration = 0.0,
+    flashingDurationTimer = 0.0,
     frame = 0,
     hitGround = false,
     fuseLength = 10,
@@ -38,7 +41,7 @@ function Target:new(targetScene, word, font, body)
   ps:setEmissionRate(500)
   ps:setEmitterLifetime(-1)
   ps:setInsertMode("bottom")
-  ps:setLinearAcceleration(0, 0, 0, -200)
+  ps:setLinearAcceleration(0, 0, 0, -100)
   ps:setParticleLifetime(1, 3)
   ps:setRadialAcceleration(0, 0)
   ps:setRotation(0, math.rad(360))
@@ -67,45 +70,66 @@ end
 
 function Target:draw()
   local screenWidth, screenHeight = gfx.getWidth(), gfx.getHeight()
-
   local x, y = self.body:getWorldPoint(-self.textWidth/2, -self.textHeight/2)
-  logInfo("%s at %f,%f", self.word.spell, x, y)
+  local frameScale = self.textWidth/70
+  logInfo("%s at %f,%f frameScale=%f", self.word.spell, x, y, frameScale)
+  
   if self.frame >= 5 then
-    gfx.draw(self.particleSystem, self.body:getWorldPoint(-self.textWidth/4,-self.textHeight/2))
+    local xx, yy = self.body:getWorldPoint(-self.textWidth/4,-self.textHeight/2)
+    gfx.draw(self.particleSystem, xx, yy , 0, frameScale, frameScale)
   end
   if self.frame >= 4 then
-    gfx.draw(self.particleSystem, self.body:getWorldPoint(self.textWidth/4,-self.textHeight/2))
+    local xx, yy = self.body:getWorldPoint(self.textWidth/4,-self.textHeight/2)
+    gfx.draw(self.particleSystem, xx, yy , 0, frameScale, frameScale)
   end
   if self.frame >= 3 then
-    gfx.draw(self.particleSystem, self.body:getWorldPoint(-self.textWidth/2,-self.textHeight/2))
+    local xx, yy = self.body:getWorldPoint(-self.textWidth/2,-self.textHeight/2)
+    gfx.draw(self.particleSystem, xx, yy , 0, frameScale, frameScale)
   end
   if self.frame >= 2 then
-    gfx.draw(self.particleSystem, self.body:getWorldPoint(self.textWidth/2,-self.textHeight/2))
+    local xx, yy = self.body:getWorldPoint(self.textWidth/2,-self.textHeight/2)
+    gfx.draw(self.particleSystem, xx, yy, 0, frameScale, frameScale)
   end
   if self.frame >= 1 then
-    gfx.draw(self.particleSystem, self.body:getWorldPoint(0,-self.textHeight/2))
+    local xx, yy =self.body:getWorldPoint(0,-self.textHeight/2)
+    gfx.draw(self.particleSystem, xx, yy, 0, frameScale, frameScale)
   end
 
   -- draw the bounding box
-  --gfx.setColor(self.flashingColor[1])
-  --gfx.polygon("fill", self.body:getWorldPoints(self.shape:getPoints()))
-
-  if self.hitCount > 1 then
-    gfx.setColor(scene.targetHitColors[2])
-  elseif self.hitCount > 0 then
-    gfx.setColor(scene.targetHitColors[1])
-  elseif self.flashingColor[1] then
-    gfx.setColor(self.flashingColor[1])
-  else
-    gfx.setColor(self.color)
-  end
+  --[[
+  gfx.setColor(255,255,0, 128)
+  local boxX1, boxY1, boxX2, boxY2, boxX3, boxY3, boxX4, boxY4 = self.body:getWorldPoints(self.shape:getPoints())
+  gfx.polygon("fill", 
+    boxX1 - 5, boxY1 - 2, 
+    boxX2 + 5, boxY2 - 3, 
+    boxX3 + 5, boxY3 + 2, 
+    boxX4 - 5, boxY4 + 3)
+  ]]
 
   gfx.setFont(self.font)
+
+  gfx.setColor(self.flashingDurationTimer > 0.0 and self.flashingColor or {0,0,0,128})
+  gfx.print(self.word.spell, x, y, self.body:getAngle(), 1.05, 1.05, 2, 2)
+  
+  local textColor
+  if self.hitCount > 1 then
+    textColor = scene.targetHitColors[2]
+  elseif self.hitCount > 0 then
+    textColor = scene.targetHitColors[1]
+  else
+    textColor = self.color
+  end
+  gfx.setColor(textColor)
   gfx.print(self.word.spell, x, y, self.body:getAngle())
 
   if self.partialHitLength > 0 then
     local highlightedText = self.word.spell:sub(1, self.partialHitLength)
-    gfx.setColor(255,255,0, 150)
+    local highlightColor = {
+      textColor[1] > 200 and 0 or 255, 
+      200,
+      (textColor[3] + 150) % 255, 
+      180}
+    gfx.setColor(highlightColor)
     gfx.print(highlightedText, x, y, self.body:getAngle())
   end
 
@@ -125,10 +149,14 @@ function Target:update(dt, input)
     self.partialHitLength = string.len(input)
   end
 
-  self.flashingFreq = self.flashingFreq - dt
-  if self.flashingFreq <= 0 then
-    self.flashingColor[1], self.flashingColor[2] = self.flashingColor[2], self.flashingColor[1]
-    self.flashingFreq = 0.2
+  if self.flashingDuration > 0 then
+    self.flashingDuration = self.flashingDuration - dt
+  else
+    self.flashingTimer = self.flashingTimer - dt
+    if self.flashingTimer <= 0 then
+      self.flashingTimer = self.flashingFreq
+      self.flashingDurationTimer = self.flashingDuration
+    end
   end
 end
 
@@ -136,6 +164,7 @@ function Target:bounce()
   local speed = math.abs(self.speed)
   self.body:applyForce(math.random(-speed*1000, speed*1000), math.random(-speed*10000, speed*100))
   self.speed = math.min(-speed*1.5, -200)
+  self.fuseBurn = -5
 end
 
 function Target:hitTest(text)

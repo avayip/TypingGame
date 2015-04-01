@@ -15,7 +15,7 @@ local scene = {
     { name = "Level 1",
       themeMusic = audio.newSource("sound/Spiritual_Moments.mp3"),
       background = gfx.newImage("graphics/background_1.jpg"),
-      wordCount = {min=3, max=5},
+      wordCount = {min=1, max=3},
       speed = {min=1, max=5},
       dropInterval = 3,
       levelUpTarget = 5
@@ -23,36 +23,36 @@ local scene = {
     { name = "Level 2",
       themeMusic = audio.newSource("sound/mvrasseli_play_the_game_0.mp3"),
       background = gfx.newImage("graphics/background_1.jpg"),
-      wordCount = {min=5, max=7},
+      wordCount = {min=2, max=5},
       speed = {min=3, max=8},
       dropInterval = 2,
       levelUpTarget = 12
     },
-    { name = "Level 4",
+    { name = "Level 3",
       themeMusic = audio.newSource("sound/epic_loop.mp3"),
       background = gfx.newImage("graphics/background_1.jpg"),
-      wordCount = {min=7, max=14},
+      wordCount = {min=3, max=10},
       speed = {min=5, max=12},
       dropInterval = 1,
       levelUpTarget = 20
     },
-    { name = "Level 5",
+    { name = "Level 4",
       themeMusic = audio.newSource("sound/Preliminary_Music.mp3"),
       background = gfx.newImage("graphics/background_1.jpg"),
-      wordCount = {min=10, max=20},
+      wordCount = {min=4, max=15},
       speed = {min=7, max=14},
       dropInterval = 0.5,
       levelUpTarget = 35
     },
-    { name = "Level 6",
+    { name = "Level 5",
       themeMusic = audio.newSource("sound/Spiritual_Moments.mp3"),
       background = gfx.newImage("graphics/background_1.jpg"),
-      wordCount = {min=10, max=30},
+      wordCount = {min=5, max=20},
       speed = {min=10, max=16},
       dropInterval = 0.5,
       levelUpTarget = 40
     },
-    { name = "Level Hell",
+    { name = "Level 6",
       themeMusic = audio.newSource("sound/Spiritual_Moments.mp3"),
       background = gfx.newImage("graphics/background_1.jpg"),
       wordCount = {min=10, max=35},
@@ -67,8 +67,9 @@ local scene = {
   defaultFont = gfx.newFont(20),
   targetColors = {
     {0,0,0,255},
-    {30,20,20,255},
-    {30,50,50,255},
+    {159,54,251,255},
+    {254,12,175,255},
+    {12,30,255,255},
   },
   targetHitColors = {
     {255,255,0,255},
@@ -91,14 +92,16 @@ function scene:load()
   self:loadDictionary("dictionary.txt")
 
   local screenWidth, screenHeight = gfx.getWidth(), gfx.getHeight()
+  
+  local fontScale = screenWidth/640
 
   self.fonts = {
-    --gfx.newFont("fonts/armybeans.ttf", 60),
-    gfx.newFont("fonts/charlie_dotted.ttf", 40),
-    gfx.newFont("fonts/EasterBunny.ttf", 40),
-    gfx.newFont("fonts/NORMAL.otf", 25),
-    gfx.newFont("fonts/melting.ttf", 40),
-    gfx.newFont("fonts/orange_juice.ttf", 40)
+    gfx.newFont("fonts/armybeans.ttf", 35*fontScale),
+    gfx.newFont("fonts/charlie_dotted.ttf", 40*fontScale),
+    gfx.newFont("fonts/EasterBunny.ttf", 30*fontScale),
+    gfx.newFont("fonts/NORMAL.otf", 16*fontScale),
+    gfx.newFont("fonts/melting.ttf", 23*fontScale),
+    gfx.newFont("fonts/orange_juice.ttf", 30*fontScale)
   }
 
   self.world:setCallbacks(self.onColision, nil, nil, nil)
@@ -152,7 +155,7 @@ function scene:update(dt, input)
       target:destroy()
       -- insert index to end of disappearedTargets, note that index is in accending order
       table.insert(disappearedTargets, index)
-    elseif target.fuseBurn > (target.fuseLength + 3) then
+    elseif target.fuseBurn > (target.fuseLength + 5) then
       self:onGameOver()
       return
     end
@@ -190,8 +193,9 @@ function scene:onScored(target)
 end
 
 function scene:onLevelUp()
-  self.level.themeMusic:stop()
+  self.level.themeMusic:pause()
   self.audio.levelUp:play()
+  self.level.themeMusic:play()
 end
 
 function scene:loadDictionary(filename)
@@ -227,7 +231,7 @@ function scene:draw()
   if bg then
     gfx.draw(bg, 0, 0, 0, screenWidth/bg:getWidth(), screenHeight/bg:getHeight())
   else
-    gfx.setBackgroundColor(155, 183, 242)
+    gfx.setBackgroundColor(5, 252, 219, 128)
   end
 
   for _, target in ipairs(self.targets) do
@@ -272,13 +276,15 @@ function scene:onGameOver()
   self.level.themeMusic:stop()
   music:play()
 
+  local body = phys.newBody(self.world, gfx.getWidth()/2, 30, "dynamic")
+  body:setMass(100)
   local target = Target:new(
     self,
     {spell = "GAME OVER", hitCount = 0},
     gfx.newFont(60),
-    phys.newBody(self.world, gfx.getWidth()/2, 30, "dynamic"))
+    body)
 
-  target.flashingFreq = 0
+  target.flashingDuration = 0
   self.gameOver = target
 end
 
