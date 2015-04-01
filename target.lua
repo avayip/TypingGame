@@ -73,7 +73,8 @@ function Target:draw()
   local x, y = self.body:getWorldPoint(-self.textWidth/2, -self.textHeight/2)
   local frameScale = self.textWidth/70
   logInfo("%s at %f,%f frameScale=%f", self.word.spell, x, y, frameScale)
-  
+
+	--[[
   if self.frame >= 5 then
     local xx, yy = self.body:getWorldPoint(-self.textWidth/4,-self.textHeight/2)
     gfx.draw(self.particleSystem, xx, yy , 0, frameScale, frameScale)
@@ -94,15 +95,22 @@ function Target:draw()
     local xx, yy =self.body:getWorldPoint(0,-self.textHeight/2)
     gfx.draw(self.particleSystem, xx, yy, 0, frameScale, frameScale)
   end
+	]]
+
+  if self.frame >= 1 then
+		self.particleSystem:setAreaSpread("uniform", self.textWidth/self.frame, 0)
+    local xx, yy =self.body:getWorldPoint(0,-self.textHeight/2)
+    gfx.draw(self.particleSystem, xx, yy, 0, frameScale, frameScale, self.body:getAngle())
+  end
 
   -- draw the bounding box
   --[[
   gfx.setColor(255,255,0, 128)
   local boxX1, boxY1, boxX2, boxY2, boxX3, boxY3, boxX4, boxY4 = self.body:getWorldPoints(self.shape:getPoints())
-  gfx.polygon("fill", 
-    boxX1 - 5, boxY1 - 2, 
-    boxX2 + 5, boxY2 - 3, 
-    boxX3 + 5, boxY3 + 2, 
+  gfx.polygon("fill",
+    boxX1 - 5, boxY1 - 2,
+    boxX2 + 5, boxY2 - 3,
+    boxX3 + 5, boxY3 + 2,
     boxX4 - 5, boxY4 + 3)
   ]]
 
@@ -110,7 +118,7 @@ function Target:draw()
 
   gfx.setColor(self.flashingDurationTimer > 0.0 and self.flashingColor or {0,0,0,128})
   gfx.print(self.word.spell, x, y, self.body:getAngle(), 1.05, 1.05, 2, 2)
-  
+
   local textColor
   if self.hitCount > 1 then
     textColor = scene.targetHitColors[2]
@@ -125,9 +133,9 @@ function Target:draw()
   if self.partialHitLength > 0 then
     local highlightedText = self.word.spell:sub(1, self.partialHitLength)
     local highlightColor = {
-      textColor[1] > 200 and 0 or 255, 
+      textColor[1] > 200 and 0 or 255,
       200,
-      (textColor[3] + 150) % 255, 
+      (textColor[3] + 150) % 255,
       180}
     gfx.setColor(highlightColor)
     gfx.print(highlightedText, x, y, self.body:getAngle())

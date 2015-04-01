@@ -64,7 +64,7 @@ local scene = {
   level = nil,
   nextDrop = 1,
   fonts = {},
-  defaultFont = gfx.newFont(20),
+  defaultFont = gfx.newFont(20*scaleFactor),
   targetColors = {
     {0,0,0,255},
     {159,54,251,255},
@@ -92,16 +92,14 @@ function scene:load()
   self:loadDictionary("dictionary.txt")
 
   local screenWidth, screenHeight = gfx.getWidth(), gfx.getHeight()
-  
-  local fontScale = screenWidth/640
 
   self.fonts = {
-    gfx.newFont("fonts/armybeans.ttf", 35*fontScale),
-    gfx.newFont("fonts/charlie_dotted.ttf", 40*fontScale),
-    gfx.newFont("fonts/EasterBunny.ttf", 30*fontScale),
-    gfx.newFont("fonts/NORMAL.otf", 16*fontScale),
-    gfx.newFont("fonts/melting.ttf", 23*fontScale),
-    gfx.newFont("fonts/orange_juice.ttf", 30*fontScale)
+    gfx.newFont("fonts/armybeans.ttf", 35*scaleFactor),
+    gfx.newFont("fonts/charlie_dotted.ttf", 40*scaleFactor),
+    gfx.newFont("fonts/EasterBunny.ttf", 30*scaleFactor),
+    gfx.newFont("fonts/NORMAL.otf", 16*scaleFactor),
+    gfx.newFont("fonts/melting.ttf", 23*scaleFactor),
+    gfx.newFont("fonts/orange_juice.ttf", 30*scaleFactor)
   }
 
   self.world:setCallbacks(self.onColision, nil, nil, nil)
@@ -109,8 +107,8 @@ function scene:load()
   self:setLevel(1)
   self:addTarget()
 
-  self.ground.body = phys.newBody(self.world, screenWidth/2, screenHeight-20)
-  self.ground.shape = phys.newRectangleShape(screenWidth, 40)
+  self.ground.body = phys.newBody(self.world, screenWidth/2, screenHeight-20*scaleFactor)
+  self.ground.shape = phys.newRectangleShape(screenWidth, 40*scaleFactor)
   self.ground.fixture = phys.newFixture(self.ground.body, self.ground.shape)
   self.ground.fixture:setUserData("[[ground]]")
 
@@ -248,13 +246,12 @@ function scene:draw()
 
   -- use default front for other text
   gfx.setFont(self.defaultFont)
-  -- draw the input
-  gfx.setColor(255, 255, 255)
 
   -- draw the level name and socore
+  gfx.setFont(scene.defaultFont)
   gfx.setColor(250, 108, 7)
-  gfx.printf(self.level.name, screenWidth - 120, screenHeight - 40, 100, "right", 0)
-  gfx.printf("Score:"..self.score, screenWidth - 120, screenHeight - 20, 100, "right", 0)
+  gfx.printf(self.level.name, screenWidth - 120*scaleFactor, screenHeight - 40*scaleFactor, 100*scaleFactor, "right", 0)
+  gfx.printf("Score:"..self.score, screenWidth - 120*scaleFactor, screenHeight - 20*scaleFactor, 100*scaleFactor, "right", 0)
 
   if self.gameOver then
     self.gameOver:draw()
@@ -277,11 +274,11 @@ function scene:onGameOver()
   music:play()
 
   local body = phys.newBody(self.world, gfx.getWidth()/2, 30, "dynamic")
-  body:setMass(100)
+  body:setMass(200)
   local target = Target:new(
     self,
     {spell = "GAME OVER", hitCount = 0},
-    gfx.newFont(60),
+    gfx.newFont(80*scaleFactor),
     body)
 
   target.flashingDuration = 0
