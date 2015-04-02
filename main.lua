@@ -13,8 +13,11 @@ gfx = love.graphics
 phys = love.physics
 audio = love.audio
 
+scaleFactor = gfx.getWidth()/640
+
 utf8 = require("utf8")
 scene = require("scene")
+scheduler = require("scheduler")
 
 -- buffer for holding current player typed text
 local input = ""
@@ -22,12 +25,12 @@ local input = ""
 function love.load(arg)
   math.randomseed(os.time())
   love.keyboard.setKeyRepeat(true)
-
   scene:load()
 end
 
 function love.update(dt)
   scene:update(dt, input:lower())
+	scheduler:update(dt)
 end
 
 function love.draw()
@@ -35,14 +38,15 @@ function love.draw()
 
   scene:draw()
 
-  gfx.setColor(255, 255, 255)
   gfx.setFont(scene.defaultFont)
-  gfx.printf(input, 20, screenHeight - 30, screenWidth)
+  gfx.setColor(255, 255, 255)
+  gfx.printf(input, 20*scaleFactor, screenHeight - 30*scaleFactor, screenWidth)
 end
 
 function love.textinput(t)
   if t ~= " " then
-    input = input..t
+    input = input..t:lower()
+		scheduler:event("input", input)
   end
 end
 
@@ -54,9 +58,8 @@ function love.keypressed(key)
       input = input:sub(1, byteoffset - 1)
     end
   elseif key == "return" or key == " " then
-    local lowercaseInput = input:lower() -- targets always store spelling in lower case
     for targetIdx, target in ipairs(scene.targets) do
-      if target:hitTest(lowercaseInput) then
+      if target:hitTest(input) then
         scene:onScored(target)
         break
       end

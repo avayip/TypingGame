@@ -18,7 +18,8 @@ local scene = {
       wordCount = {min=1, max=3},
       speed = {min=1, max=5},
       dropInterval = 3,
-      levelUpTarget = 5
+      levelUpTarget = 5,
+	  maxFrame = 5
     },
     { name = "Level 2",
       themeMusic = audio.newSource("sound/mvrasseli_play_the_game_0.mp3"),
@@ -34,7 +35,8 @@ local scene = {
       wordCount = {min=3, max=10},
       speed = {min=5, max=12},
       dropInterval = 1,
-      levelUpTarget = 20
+      levelUpTarget = 20,
+	  maxFrame = 5
     },
     { name = "Level 4",
       themeMusic = audio.newSource("sound/Preliminary_Music.mp3"),
@@ -42,7 +44,8 @@ local scene = {
       wordCount = {min=4, max=15},
       speed = {min=7, max=14},
       dropInterval = 0.5,
-      levelUpTarget = 35
+      levelUpTarget = 35,
+	  maxFrame = 5
     },
     { name = "Level 5",
       themeMusic = audio.newSource("sound/Spiritual_Moments.mp3"),
@@ -50,7 +53,8 @@ local scene = {
       wordCount = {min=5, max=20},
       speed = {min=10, max=16},
       dropInterval = 0.5,
-      levelUpTarget = 40
+      levelUpTarget = 40,
+	  maxFrame = 5
     },
     { name = "Level 6",
       themeMusic = audio.newSource("sound/Spiritual_Moments.mp3"),
@@ -58,7 +62,8 @@ local scene = {
       wordCount = {min=10, max=35},
       speed = {min=5, max=20},
       dropInterval = 0.5,
-      levelUpTarget = -1
+      levelUpTarget = -1,
+	  maxFrame = 5
     },
   },
   level = nil,
@@ -75,7 +80,7 @@ local scene = {
     {255,255,0,255},
     {255,0,0,255},
   },
-  world = phys.newWorld(0, 10, true),
+  world = phys.newWorld(0, scaleFactor*10, true),
   ground = {},
   leftWall = {},
   rightWall = {},
@@ -146,14 +151,14 @@ function scene:update(dt, input)
 
   local disappearedTargets = {}
   for index, target in ipairs(self.targets) do
-    target:update(dt, input)
+    target:update(dt)
 
     -- check if target is out of screen and destroy it
     if target.body:getY() < -50 then
       target:destroy()
       -- insert index to end of disappearedTargets, note that index is in accending order
       table.insert(disappearedTargets, index)
-    elseif target.fuseBurn > (target.fuseLength + 5) then
+    elseif target.frame == self.level.maxFrame then
       self:onGameOver()
       return
     end
@@ -218,7 +223,7 @@ function scene:addTarget()
     self.dictionary[math.random(#self.dictionary)],
   }
   table.sort(words, function(w1, w2) return w1.hitCount < w2.hitCount end)
-  local target = Target:new(self, words[1])
+  local target = Target:new(words[1])
   table.insert(scene.targets, target)
 end
 
@@ -276,7 +281,6 @@ function scene:onGameOver()
   local body = phys.newBody(self.world, gfx.getWidth()/2, 30, "dynamic")
   body:setMass(200)
   local target = Target:new(
-    self,
     {spell = "GAME OVER", hitCount = 0},
     gfx.newFont(80*scaleFactor),
     body)
