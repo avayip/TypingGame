@@ -2,8 +2,6 @@
 Authors: Shing Yip, Ava Yip, Natalie Yip
 ]]
 
-Target = require("Target")
-
 --[[
 scene table defines game scene
 ]]
@@ -107,15 +105,13 @@ function scene:load()
     gfx.newFont("fonts/orange_juice.ttf", 30*scaleFactor)
   }
 
-  self.world:setCallbacks(self.onColision, nil, nil, nil)
+  self.world:setCallbacks(self.onCollision, nil, nil, nil)
 
   self:setLevel(1)
   self:addTarget()
 
-  self.ground.body = phys.newBody(self.world, screenWidth/2, screenHeight-20*scaleFactor)
-  self.ground.shape = phys.newRectangleShape(screenWidth, 40*scaleFactor)
-  self.ground.fixture = phys.newFixture(self.ground.body, self.ground.shape)
-  self.ground.fixture:setUserData("[[ground]]")
+	self.ground = object:new{shape = phys.newRectangleShape(screenWidth, 40*scaleFactor)}
+	self.ground:addToWorld(self.world, screenWidth/2, screenHeight-20*scaleFactor)
 
   self.leftWall.body = phys.newBody(self.world, 1, screenHeight/2)
   self.leftWall.shape = phys.newRectangleShape(2, screenHeight)
@@ -130,8 +126,9 @@ function scene:update(dt, input)
   self.world:update(dt)
 
   if self.gameOver then
-    for index, target in ipairs(self.targets) do
-      target:update(dt, input)
+		self.gameOver:update(dt)
+    for index, tg in ipairs(self.targets) do
+      tg:update(dt)
     end
     return
   end
@@ -150,15 +147,15 @@ function scene:update(dt, input)
   end
 
   local disappearedTargets = {}
-  for index, target in ipairs(self.targets) do
-    target:update(dt)
+  for index, tg in ipairs(self.targets) do
+    tg:update(dt)
 
     -- check if target is out of screen and destroy it
-    if target.body:getY() < -50 then
-      target:destroy()
+    if tg.body:getY() < -50 then
+      tg:destroy()
       -- insert index to end of disappearedTargets, note that index is in accending order
       table.insert(disappearedTargets, index)
-    elseif target.frame == self.level.maxFrame then
+    elseif tg.frame == self.level.maxFrame then
       self:onGameOver()
       return
     end
@@ -191,7 +188,7 @@ function scene:setLevel(newLevel)
   end
 end
 
-function scene:onScored(target)
+function scene:onScored(tg)
   self.score = self.score + 1
 end
 
@@ -223,8 +220,7 @@ function scene:addTarget()
     self.dictionary[math.random(#self.dictionary)],
   }
   table.sort(words, function(w1, w2) return w1.hitCount < w2.hitCount end)
-  local target = Target:new(words[1])
-  table.insert(scene.targets, target)
+  table.insert(scene.targets, target:new{word = words[1]})
 end
 
 function scene:draw()
@@ -237,8 +233,8 @@ function scene:draw()
     gfx.setBackgroundColor(5, 252, 219, 128)
   end
 
-  for _, target in ipairs(self.targets) do
-    target:draw()
+  for _, tg in ipairs(self.targets) do
+    tg:draw()
   end
 
   -- draw the ground
@@ -280,24 +276,25 @@ function scene:onGameOver()
 
   local body = phys.newBody(self.world, gfx.getWidth()/2, 30, "dynamic")
   body:setMass(200)
-  local target = Target:new(
-    {spell = "GAME OVER", hitCount = 0},
-    gfx.newFont(80*scaleFactor),
-    body)
+  local tg = target:new{
+    word = {spell = "GAME OVER", hitCount = 0},
+    font = gfx.newFont(80*scaleFactor),
+    body = body,
+		speed = 3000*scaleFactor}
 
-  target.flashingDuration = 0
-  self.gameOver = target
+  tg.flashingDuration = 0
+  self.gameOver = tg
 end
 
-function scene.onColision(a, b, contact)
-  local target
-  if a:getUserData() == "[[ground]]" then
-    target = b:getUserData()
-  elseif b:getUserData() == "[[ground]]" then
-    target = a:getUserData()
+function scene.onCollision(a, b, contact)
+  local tg
+  if a:getUserData() == scene.ground then
+	tg = b:getUserData()
+  elseif b:getUserData() == scene.ground then
+    tg = a:getUserData()
   end
-  if target then
-    target:onHitGround()
+  if type(tg) == "table" and tg.onHitGround then
+    tg:onHitGround()
   end
 end
 

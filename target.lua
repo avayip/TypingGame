@@ -2,36 +2,32 @@
 Authors: Shing Yip, Ava Yip, Natalie Yip
 ]]
 
+object = require("object")
+
 local fireImg = gfx.newImage("graphics/circle.png")
-local Target = {}
+local Target = object:new()
 
-function Target:new(word, font, body)
+function Target:__init()
   local windowWidth = gfx.getWidth()
-  font = font or scene.fonts[math.random(1, #scene.fonts)]
-  local target = {
-		running = true,
-    font = font,
-    word = word,
-    textWidth = font:getWidth(word.spell),
-    textHeight = font:getHeight(word.spell),
-    color = scene.targetColors[math.random(1, #scene.targetColors)],
-    speed = scaleFactor*math.random(scene.level.speed.min, scene.level.speed.max),
-    partialHitLength = 0,
-    hitCount = 0,
-    flashingColor = {255,255,0,128},
-    flashingFreq = 0.0,
-    flashingTimer = 0.0,
-    flashingDuration = 0.0,
-    flashingDurationTimer = 0.0,
-    frame = 0,
-  }
+	self.running = true
+	self.font = self.font or scene.fonts[math.random(1, #scene.fonts)]
+	self.textWidth = self.font:getWidth(self.word.spell)
+	self.textHeight = self.font:getHeight(self.word.spell)
+	self.color = self.color or scene.targetColors[math.random(1, #scene.targetColors)]
+	self.speed = self.speed or scaleFactor*math.random(scene.level.speed.min, scene.level.speed.max)
+	self.partialHitLength = 0
+	self.hitCount = 0
+	self.flashingColor = {255,255,0,128}
+	self.flashingFreq = 0.0
+	self.flashingTimer = 0.0
+	self.flashingDuration = 0.0
+	self.flashingDurationTimer = 0.0
+	self.frame = 0
 
-  target.body = body or phys.newBody(scene.world, math.random(10, windowWidth - 10), 10, "dynamic")
-  target.body:setMass(10)
-  target.shape = phys.newRectangleShape(target.textWidth, target.textHeight)
-  target.fixture = phys.newFixture(target.body, target.shape, 1)
-  target.fixture:setRestitution(0.5*scaleFactor)
-  target.fixture:setUserData(target)
+  self:setShape(phys.newRectangleShape(self.textWidth, self.textHeight))
+	self:addToWorld(scene.world, math.random(10, windowWidth - 10), 10, "dynamic")
+  self.body:setMass(10)
+  self.fixture:setRestitution(0.5*scaleFactor)
 
   local ps = gfx.newParticleSystem(fireImg, 32)
   ps:setColors({255, 128, 32, 255}, {222, 128, 32, 255}, {128, 32, 32, 32}, {90, 12, 12, 92}, {32, 32, 32, 0})
@@ -50,15 +46,14 @@ function Target:new(word, font, body)
   ps:setSpinVariation(1)
   ps:setSpread(math.rad(360))
   ps:setTangentialAcceleration(0, 0)
-  target.particleSystem = ps
+  self.framePartSys = ps
 
-  setmetatable(target, self)
-  self.__index = self
+	scheduler.start(self.inputChangeRoutine, self)
 
-	scheduler.start(target.inputChangeRoutine, target)
-  return target
+  return self
 end
 
+--[[
 function Target:destroy()
 	self.running = false
   self.fixture:setUserData(nil)
@@ -67,6 +62,7 @@ function Target:destroy()
   self.shape = nil
   self.fixture = nil
 end
+]]
 
 function Target:draw()
   local screenWidth, screenHeight = gfx.getWidth(), gfx.getHeight()
@@ -76,9 +72,9 @@ function Target:draw()
 
   if self.frame >= 1 then
 		local frameSpread = self.textWidth*self.frame/scene.level.maxFrame
-		self.particleSystem:setAreaSpread("uniform", frameSpread, 0)
+		self.framePartSys:setAreaSpread("uniform", frameSpread, 0)
     local xx, yy =self.body:getWorldPoint(0,-self.textHeight/2)
-    gfx.draw(self.particleSystem, xx, yy, 0, frameScale, frameScale, self.body:getAngle())
+    gfx.draw(self.framePartSys, xx, yy, 0, frameScale, frameScale, self.body:getAngle())
   end
 
   -- draw the bounding box
@@ -122,7 +118,7 @@ end
 
 function Target:update(dt)
   self.body:applyForce(0, self.speed)
-  self.particleSystem:update(dt)
+  self.framePartSys:update(dt)
 
   if self.flashingDuration > 0 then
     self.flashingDuration = self.flashingDuration - dt

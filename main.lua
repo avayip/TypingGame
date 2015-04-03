@@ -18,6 +18,9 @@ scaleFactor = gfx.getWidth()/640
 utf8 = require("utf8")
 scene = require("scene")
 scheduler = require("scheduler")
+object = require("object")
+target = require("target")
+
 
 -- buffer for holding current player typed text
 local input = ""
@@ -58,9 +61,9 @@ function love.keypressed(key)
       input = input:sub(1, byteoffset - 1)
     end
   elseif key == "return" or key == " " then
-    for targetIdx, target in ipairs(scene.targets) do
-      if target:hitTest(input) then
-        scene:onScored(target)
+    for _, tg in ipairs(scene.targets) do
+      if tg:hitTest(input) then
+        scene:onScored(tg)
         break
       end
     end
