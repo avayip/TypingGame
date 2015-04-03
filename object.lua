@@ -19,6 +19,7 @@ function Object:addToWorld(world, x, y, bodyType)
 	self.body = self.body or phys.newBody(world, x, y, bodyType)
 	self.fixture = phys.newFixture(self.body, self.shape)
 	self.fixture:setUserData(self)
+	return self
 end
 
 function Object:destroy()

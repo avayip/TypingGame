@@ -113,13 +113,11 @@ function scene:load()
 	self.ground = object:new{shape = phys.newRectangleShape(screenWidth, 40*scaleFactor)}
 	self.ground:addToWorld(self.world, screenWidth/2, screenHeight-20*scaleFactor)
 
-  self.leftWall.body = phys.newBody(self.world, 1, screenHeight/2)
-  self.leftWall.shape = phys.newRectangleShape(2, screenHeight)
-  self.leftWall.fixture = phys.newFixture(self.leftWall.body, self.leftWall.shape)
-
-  self.rightWall.body = phys.newBody(self.world, screenWidth - 1, screenHeight/2)
-  self.rightWall.shape = phys.newRectangleShape(2, screenHeight)
-  self.rightWall.fixture = phys.newFixture(self.rightWall.body, self.rightWall.shape)
+	local wallShape = phys.newRectangleShape(2, screenHeight)
+	self.staticObjects = {
+		leftWall = object:new{shape = wallShape}:addToWorld(self.world, 1, screenHeight/2),
+	  rightWall = object:new{shape = wallShape}:addToWorld(self.world, screenWidth - 1, screenHeight/2)
+	}
 end
 
 function scene:update(dt, input)
@@ -240,10 +238,6 @@ function scene:draw()
   -- draw the ground
   --gfx.setColor(72, 160, 14)
   --gfx.polygon("fill", self.ground.body:getWorldPoints(self.ground.shape:getPoints()))
-
-  -- draw the walls
-  --gfx.polygon("fill", self.leftWall.body:getWorldPoints(self.leftWall.shape:getPoints()))
-  --gfx.polygon("fill", self.rightWall.body:getWorldPoints(self.rightWall.shape:getPoints()))
 
   -- use default front for other text
   gfx.setFont(self.defaultFont)
