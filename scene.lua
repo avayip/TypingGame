@@ -101,13 +101,13 @@ function scene:load()
     self.fonts = {
         gfx.newFont("fonts/charlie_dotted.ttf", 60*scaleFactor),
         gfx.newFont("fonts/sans_plate_caps.ttf", 40*scaleFactor),
-        gfx.newFont("fonts/alpaca_scarlett_demo.ttf", 40*scaleFactor),        
+        gfx.newFont("fonts/alpaca_scarlett_demo.ttf", 40*scaleFactor),
         gfx.newFont("fonts/chock_a_block.ttf", 40*scaleFactor),
 
         --gfx.newFont("fonts/cut_me_out.ttf", 40*scaleFactor),
         gfx.newFont("fonts/cut_me_out2.ttf", 40*scaleFactor),
         gfx.newFont("fonts/cut_me_out3.ttf", 40*scaleFactor),
-        
+
     }
 
     self.world:setCallbacks(self.onCollision, nil, nil, nil)
@@ -125,7 +125,7 @@ function scene:createStaticObjects(screenWidth, screenHeight)
     self.ground = object:new{shape = phys.newRectangleShape(screenWidth, 40*scaleFactor)}
     self.ground:addToWorld(self.world, screenWidth/2, screenHeight-20*scaleFactor)
 
-    if self.staticObjects then 
+    if self.staticObjects then
         for _, obj in pairs(self.staticObjects) do obj:destroy() end
     end
     local wallShape = phys.newRectangleShape(1, screenHeight*2)
@@ -294,13 +294,13 @@ function scene:draw()
     end
     -- for debugging : draw all shapes
     --[[
-  gfx.setColor(255, 255, 255)
-  self.world:queryBoundingBox(0, 0, screenWidth, screenHeight,
-    function(fixture)
-      gfx.polygon("line", fixture:getBody():getWorldPoints(fixture:getShape():getPoints()))
-    end
-  )
-  ]]
+		gfx.setColor(255, 255, 255)
+		self.world:queryBoundingBox(0, 0, screenWidth, screenHeight,
+		function(fixture)
+				gfx.polygon("line", fixture:getBody():getWorldPoints(fixture:getShape():getPoints()))
+		end
+		)
+		]]
 end
 
 function scene:onGameOver()
@@ -320,15 +320,15 @@ function scene:onGameOver()
     tg.flashingDuration = 0
     self.gameOver = tg
 
-    gui.newButton{
+    gui.add(gui.newButton{
         id="new_game",
         x=screenWidth/8*2, y=screenHeight/2,
         w=200, h=40,
         color={255,255,255,180},
         text="New Game",
         normalImage="graphics/BTN_GREEN_RECT_OUT.png",
-        onClick = function() scene:reset(); gui.remove("new_game", "quit_game") end}
-    gui.newButton{
+        onClick = function() scene:reset(); gui.remove("new_game", "quit_game") end})
+    gui.add(gui.newButton{
         id="quit_game",
         x=screenWidth/8*4, y=screenHeight/2,
         w=200, h=40,
@@ -336,7 +336,7 @@ function scene:onGameOver()
         text="Quit",
         fontXScale=1,
         normalImage="graphics/BTN_GREEN_RECT_OUT.png",
-        onClick = function() love.event.quit(); gui.remove("quit_game") end}
+        onClick = function() love.event.quit(); gui.remove("quit_game") end})
 end
 
 function scene.onCollision(a, b, contact)

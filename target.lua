@@ -48,17 +48,6 @@ function Target:__init()
     return self
 end
 
---[[
-function Target:destroy()
-	self.running = false
-  self.fixture:setUserData(nil)
-  self.body:destroy()
-  self.body = nil
-  self.shape = nil
-  self.fixture = nil
-end
-]]
-
 function Target:draw()
     local screenWidth, screenHeight = gfx.getWidth(), gfx.getHeight()
     local x, y = self.body:getWorldPoint(-self.textWidth/2, -self.textHeight/2)

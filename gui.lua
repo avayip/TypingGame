@@ -1,9 +1,30 @@
+local gfx = love.graphics
+
+local gui = {
+    widgets = {},
+    defaultButtonFont = gfx.newFont(20)
+}
+
+--[=[
+Widget Class
+]=]
+
 local Widget = {}
 function Widget:new(o)
     o = o or {}
     setmetatable(o, self)
     self.__index = self
     if o.__init then o:__init() end
+
+	if self ~= Widget then
+		assert(o.id, "id is required")
+		assert(o.x, "x is required")
+		assert(o.y, "y is required")
+		assert(o.w, "w is required")
+		assert(o.h, "h is required")
+		o.active = o.active or true
+	end
+
     return o
 end
 
@@ -22,25 +43,25 @@ function Widget:clickTest(x, y, btn)
     end
 end
 
-local gui = {
-    widgets = {},
-    defaultButtonFont = gfx.newFont(20)
-}
-
+--[=[
+Button Class
+]=]
 gui.Button = Widget:new()
 
 function gui.Button:__init()
-    assert(self.id, "id is required")
-    assert(self.x, "x is required")
-    assert(self.y, "y is required")
-    assert(self.w, "w is required")
-    assert(self.h, "h is required")
-
-    self.active = self.active or true
-
     self.rotation = self.rotation or 0
-    if self.text and self.tex ~= "" then
+    if self.text and self.text ~= "" then
         self.font = self.font or gui.defaultButtonFont
+		self:sizeChanged()
+    end
+
+    if self.normalImage and type(self.normalImage) == "string" then
+        self.normalImage = gfx.newImage(self.normalImage)
+    end
+end
+
+function gui.Button:sizeChanged()
+    if self.text and self.text ~= "" then
         local textWidth = self.font:getWidth(self.text)
         local textHeight = self.font:getHeight(self.text)
         self.textWidthMargin = self.textWidthMargin or textWidth*0.2
@@ -52,33 +73,87 @@ function gui.Button:__init()
         self.fontYScale = self.fontYScale or self.h/(textHeight + self.textHeightMargin*2)
         self.textXOffset = (self.w - self.fontXScale*(textWidth + self.textWidthMargin*2))/2
     end
-
-    if self.normalImage and type(self.normalImage) == "string" then
-        self.normalImage = gfx.newImage(self.normalImage)
-    end
-
-    gui.widgets[self.id] = self
 end
 
 function gui.Button:draw()
-    if self.color then
-        gfx.setColor(self.color)
-    end
     if self.normalImage then
+		gfx.setColor(self.imageColor and self.imageColor or {255,255,255,255})
         gfx.draw(self.normalImage,
             self.x, self.y,
             self.rotation,
             self.w/self.normalImage:getWidth(), self.h/self.normalImage:getHeight())
     end
-    if self.text then
+    if self.text and self.text ~= "" then
+		if self.color then
+			gfx.setColor(self.color)
+		end
         gfx.setFont(self.font)
-        gfx.print(self.text, 
-            self.x + self.textXOffset, 
-            self.y, 
+        gfx.print(self.text,
+            self.x + self.textXOffset,
+            self.y,
             self.rotation, self.fontXScale, self.fontYScale,
             -self.textWidthMargin,
             -self.textHeightMargin)
     end
+end
+
+--[=[
+Grid Class
+]=]
+gui.Grid = Widget:new()
+
+function gui.Grid:__init()
+	if self.layout and #self.layout > 0 then
+		self:planLayout()
+	end
+	self.widgets = self.widgets or {}
+end
+
+function gui.Grid:planLayout()
+	self.widgets = {}
+	local y = self.y
+	local w = self.w/#self.layout[1]
+	local h = self.h/#self.layout
+	for _, row in ipairs(self.layout) do
+		local x = self.x
+		for _, cell in ipairs(row) do
+			local maker = cell.maker
+			if maker then
+				local init = cell.init or {}
+				init.x = x
+				init.y = y
+				init.w = w*(cell.hspan or 1)
+				init.h = h*(cell.vspan or 1)
+				self.widgets[#self.widgets + 1] = maker(init)
+			end
+			x = x + w*(cell.hspan or 1)
+		end
+		y = y + h
+	end
+end
+
+function gui.Grid:draw()
+	self:forward("draw")
+end
+
+function gui.Grid:clickTest(...)
+	self:forward("clickTest", ...)
+end
+
+function gui.Grid:forward(func, ...)
+	for _, widget in ipairs(self.widgets) do
+		if widget and widget.active then
+			widget[func](widget, ...)
+		end
+	end
+end
+
+--[=[
+gui module functions
+]=]
+
+function gui.add(widget)
+	gui.widgets[widget.id] = widget
 end
 
 function gui.remove(id, ...)
