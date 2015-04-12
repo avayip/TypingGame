@@ -308,13 +308,13 @@ function scene:draw()
     end
     -- for debugging : draw all shapes
     --[[
-  gfx.setColor(255, 255, 255)
-  self.world:queryBoundingBox(0, 0, screenWidth, screenHeight,
-    function(fixture)
-      gfx.polygon("line", fixture:getBody():getWorldPoints(fixture:getShape():getPoints()))
-    end
-  )
-  ]]
+		gfx.setColor(255, 255, 255)
+		self.world:queryBoundingBox(0, 0, screenWidth, screenHeight,
+		function(fixture)
+				gfx.polygon("line", fixture:getBody():getWorldPoints(fixture:getShape():getPoints()))
+		end
+		)
+		]]
 end
 
 function scene:onGameOver()
@@ -334,7 +334,7 @@ function scene:onGameOver()
     tg.flashingDuration = 0
     self.gameOver = tg
 
-    gui.newButton{
+    gui.add(gui.newButton{
         id="new_game",
         x=screenWidth/8*2, y=screenHeight/2,
         w=200, h=40,
@@ -342,8 +342,8 @@ function scene:onGameOver()
         textColor={255,255,255,255},
         text="New Game",
         normalImage="graphics/green_button.png",
-        onClick = function() scene:reset(); gui.remove("new_game", "quit_game") end}
-    gui.newButton{
+        onClick = function() scene:reset(); gui.remove("new_game", "quit_game") end})
+    gui.add(gui.newButton{
         id="quit_game",
         x=screenWidth/8*4, y=screenHeight/2,
         w=200, h=40,
@@ -352,7 +352,7 @@ function scene:onGameOver()
         text="Quit",
         fontXScale=1,
         normalImage="graphics/green_button.png",
-        onClick = function() love.event.quit(); gui.remove("quit_game") end}
+        onClick = function() love.event.quit(); gui.remove("quit_game") end})
 end
 
 function scene.onCollision(a, b, contact)
