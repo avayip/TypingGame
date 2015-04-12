@@ -26,7 +26,6 @@ target = require("target")
 local input = ""
 
 function love.load(arg)
-    love.window.setMode(600, 800, {resizable=true, vsync=false, minwidth=480, minheight=600})
     math.randomseed(os.time())
     love.keyboard.setKeyRepeat(true)
     scene:load()

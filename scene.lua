@@ -9,63 +9,64 @@ local scene = {
     targets = {},
     score = 0,
     dictionary = {},
-    maxFrame = 5,
+    warningflame = 2,
+    maxflame = 5,
     levels = {
         { name = "Level 1",
             themeMusic = audio.newSource("sound/Spiritual_Moments.mp3"),
-            background = gfx.newImage("graphics/background_1.jpg"),
+            background = gfx.newImage("graphics/summer-landscape-illustration.jpg"),
             wordCount = {min=1, max=3},
             wordLengthLimit = 6,
             speed = {min=1, max=5},
             dropInterval = 3,
             levelUpTarget = 5,
-            frameSpreadSpeed = 5
+            flameSpreadSpeed = 5
         },
         { name = "Level 2",
             themeMusic = audio.newSource("sound/mvrasseli_play_the_game_0.mp3"),
-            background = gfx.newImage("graphics/background_1.jpg"),
+            background = gfx.newImage("graphics/summer-landscape-illustration.jpg"),
             wordCount = {min=2, max=5},
             wordLengthLimit = 8,
             speed = {min=3, max=8},
             dropInterval = 2,
             levelUpTarget = 12,
-            frameSpreadSpeed = 4
+            flameSpreadSpeed = 4
         },
         { name = "Level 3",
             themeMusic = audio.newSource("sound/epic_loop.mp3"),
-            background = gfx.newImage("graphics/background_1.jpg"),
+            background = gfx.newImage("graphics/summer-landscape-illustration.jpg"),
             wordCount = {min=3, max=10},
             speed = {min=5, max=12},
             dropInterval = 1,
             levelUpTarget = 20,
-            frameSpreadSpeed = 3
+            flameSpreadSpeed = 3
         },
         { name = "Level 4",
             themeMusic = audio.newSource("sound/Preliminary_Music.mp3"),
-            background = gfx.newImage("graphics/background_1.jpg"),
+            background = gfx.newImage("graphics/summer-landscape-illustration.jpg"),
             wordCount = {min=4, max=15},
             speed = {min=7, max=14},
             dropInterval = 0.5,
             levelUpTarget = 35,
-            frameSpreadSpeed = 2
+            flameSpreadSpeed = 2
         },
         { name = "Level 5",
             themeMusic = audio.newSource("sound/Spiritual_Moments.mp3"),
-            background = gfx.newImage("graphics/background_1.jpg"),
+            background = gfx.newImage("graphics/summer-landscape-illustration.jpg"),
             wordCount = {min=5, max=20},
             speed = {min=10, max=16},
             dropInterval = 0.5,
             levelUpTarget = 40,
-            frameSpreadSpeed = 2
+            flameSpreadSpeed = 2
         },
         { name = "Level 6",
             themeMusic = audio.newSource("sound/Spiritual_Moments.mp3"),
-            background = gfx.newImage("graphics/background_1.jpg"),
+            background = gfx.newImage("graphics/summer-landscape-illustration.jpg"),
             wordCount = {min=10, max=35},
             speed = {min=5, max=20},
             dropInterval = 0.5,
             levelUpTarget = -1,
-            frameSpreadSpeed = 1
+            flameSpreadSpeed = 1
         },
     },
     level = nil,
@@ -87,6 +88,8 @@ local scene = {
     audio = {
         hit = audio.newSource("sound/whistle.wav", "static"),
         levelUp = audio.newSource("sound/magical_1_0.ogg", "static"),
+        explosion = audio.newSource("sound/explosion.ogg", "static"),
+        siren = audio.newSource("sound/air_raid_siren.ogg", "static")
     },
 
     levelIdx = 1,
@@ -99,15 +102,15 @@ function scene:load()
     local screenWidth, screenHeight = gfx.getWidth(), gfx.getHeight()
 
     self.fonts = {
-        gfx.newFont("fonts/charlie_dotted.ttf", 60*scaleFactor),
-        gfx.newFont("fonts/sans_plate_caps.ttf", 40*scaleFactor),
-        gfx.newFont("fonts/alpaca_scarlett_demo.ttf", 40*scaleFactor),        
-        gfx.newFont("fonts/chock_a_block.ttf", 40*scaleFactor),
+        gfx.newFont("fonts/charlie_dotted.ttf", 40*scaleFactor),
+        gfx.newFont("fonts/sans_plate_caps.ttf", 24*scaleFactor),
+        gfx.newFont("fonts/alpaca_scarlett_demo.ttf", 24*scaleFactor),
+        gfx.newFont("fonts/chock_a_block.ttf", 24*scaleFactor),
 
         --gfx.newFont("fonts/cut_me_out.ttf", 40*scaleFactor),
-        gfx.newFont("fonts/cut_me_out2.ttf", 40*scaleFactor),
-        gfx.newFont("fonts/cut_me_out3.ttf", 40*scaleFactor),
-        
+        gfx.newFont("fonts/cut_me_out2.ttf", 24*scaleFactor),
+        gfx.newFont("fonts/cut_me_out3.ttf", 24*scaleFactor),
+
     }
 
     self.world:setCallbacks(self.onCollision, nil, nil, nil)
@@ -125,7 +128,7 @@ function scene:createStaticObjects(screenWidth, screenHeight)
     self.ground = object:new{shape = phys.newRectangleShape(screenWidth, 40*scaleFactor)}
     self.ground:addToWorld(self.world, screenWidth/2, screenHeight-20*scaleFactor)
 
-    if self.staticObjects then 
+    if self.staticObjects then
         for _, obj in pairs(self.staticObjects) do obj:destroy() end
     end
     local wallShape = phys.newRectangleShape(1, screenHeight*2)
@@ -180,6 +183,7 @@ function scene:update(dt, input)
     end
 
     local disappearedTargets = {}
+    local turnOnSiren = false
     for index, tg in ipairs(self.targets) do
         tg:update(dt)
 
@@ -188,10 +192,20 @@ function scene:update(dt, input)
             tg:destroy()
             -- insert index to end of disappearedTargets, note that index is in accending order
             table.insert(disappearedTargets, index)
-        elseif tg.frame == self.maxFrame then
-            self:onGameOver()
-            return
+        elseif tg.flame > self.warningflame then
+            turnOnSiren = true
+            if tg.flame == self.maxflame then
+                self:onGameOver()
+                return
+            end
         end
+    end
+    
+    if not turnOnSiren then
+        self.audio.siren:stop()
+    elseif not self.sirenOn then
+        self.audio.siren:setLooping(true)
+        self.audio.siren:play()
     end
 
     -- remove targets from self.targets in reverse order
@@ -254,7 +268,7 @@ function scene:addTarget()
         for tryCnt = 1, 10 do
             word = self.dictionary[math.random(#self.dictionary)]
             if self.level.wordLengthLimit == nil or #word.spell < self.level.wordLengthLimit then
-                logInfo("word within limit %d %s", self.level.wordLengthLimit, word.spell)
+                logInfo("word within limit %d %s", (self.level.wordLengthLimit or -1), word.spell)
                 break
             end
         end
@@ -324,18 +338,20 @@ function scene:onGameOver()
         id="new_game",
         x=screenWidth/8*2, y=screenHeight/2,
         w=200, h=40,
-        color={255,255,255,180},
+        color={200,255,200,255},
+        textColor={255,255,255,255},
         text="New Game",
-        normalImage="graphics/BTN_GREEN_RECT_OUT.png",
+        normalImage="graphics/green_button.png",
         onClick = function() scene:reset(); gui.remove("new_game", "quit_game") end}
     gui.newButton{
         id="quit_game",
         x=screenWidth/8*4, y=screenHeight/2,
         w=200, h=40,
-        color={255,255,255,180},
+        color={200,255,200,255},
+        textColor={255,255,255,255},
         text="Quit",
         fontXScale=1,
-        normalImage="graphics/BTN_GREEN_RECT_OUT.png",
+        normalImage="graphics/green_button.png",
         onClick = function() love.event.quit(); gui.remove("quit_game") end}
 end
 

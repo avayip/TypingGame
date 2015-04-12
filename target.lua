@@ -17,7 +17,7 @@ function Target:__init()
     self.speed = self.speed or scaleFactor*math.random(scene.level.speed.min, scene.level.speed.max)
     self.partialHitLength = 0
     self.hitCount = 0
-    self.frame = 0
+    self.flame = 0
 
     self:setShape(phys.newRectangleShape(self.textWidth, self.textHeight))
     self:addToWorld(scene.world, math.random(10, windowWidth - 10), 10, "dynamic")
@@ -41,7 +41,7 @@ function Target:__init()
     ps:setSpinVariation(1)
     ps:setSpread(math.rad(360))
     ps:setTangentialAcceleration(0, 0)
-    self.framePartSys = ps
+    self.flamePartSys = ps
 
     scheduler.start(self.inputChangeRoutine, self)
 
@@ -62,14 +62,14 @@ end
 function Target:draw()
     local screenWidth, screenHeight = gfx.getWidth(), gfx.getHeight()
     local x, y = self.body:getWorldPoint(-self.textWidth/2, -self.textHeight/2)
-    local frameScale = self.textWidth/80
-    --logInfo("%s at %f,%f frameScale=%f", self.word.spell, x, y, frameScale)
+    local flameScale = self.textWidth/80
+    --logInfo("%s at %f,%f flameScale=%f", self.word.spell, x, y, flameScale)
 
-    if self.frame >= 1 then
-        local frameSpread = (self.textWidth*self.frame/scene.maxFrame)/2
-        self.framePartSys:setAreaSpread("uniform", frameSpread, 0)
+    if self.flame >= 1 then
+        local flameSpread = (self.textWidth*self.flame/scene.maxflame)/2
+        self.flamePartSys:setAreaSpread("uniform", flameSpread, 0)
         local xx, yy =self.body:getWorldPoint(0,-self.textHeight/2)
-        gfx.draw(self.framePartSys, xx, yy, 0, frameScale, frameScale, self.body:getAngle())
+        gfx.draw(self.flamePartSys, xx, yy, 0, flameScale, flameScale, self.body:getAngle())
     end
 
     -- draw the bounding box
@@ -109,7 +109,7 @@ end
 
 function Target:update(dt)
     self.body:applyForce(0, self.speed)
-    self.framePartSys:update(dt)
+    self.flamePartSys:update(dt)
 end
 
 function Target:inputChangeRoutine()
@@ -124,13 +124,13 @@ function Target:inputChangeRoutine()
 end
 
 function Target:framingRoutine()
-    for i = 1, scene.maxFrame do
+    for i = 1, scene.maxflame do
         if self.hitCount > 0 then
-            self.frame = 0
+            self.flame = 0
             return
         end
-        self.frame = i
-        scheduler:waitSeconds(scene.level.frameSpreadSpeed or 2)
+        self.flame = i
+        scheduler:waitSeconds(scene.level.flameSpreadSpeed or 2)
     end
 end
 
@@ -149,7 +149,7 @@ function Target:hitTest(text)
         self:bounce()
         self.hitCount = self.hitCount + 1
         self.word.hitCount = self.word.hitCount + 1
-        self.frame = 0
+        self.flame = 0
         return self.hitCount == 1 -- only return true on first hit
     end
     return false
@@ -160,6 +160,8 @@ function Target:onHitGround()
     if not self.hitGround then
         self.hitGround = true
         scheduler.start(self.framingRoutine, self)
+        scene.audio.explosion:stop()
+        scene.audio.explosion:play()
     end
 end
 

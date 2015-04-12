@@ -71,6 +71,9 @@ function gui.Button:draw()
             self.w/self.normalImage:getWidth(), self.h/self.normalImage:getHeight())
     end
     if self.text then
+        if self.textColor then
+            gfx.setColor(self.textColor)
+        end
         gfx.setFont(self.font)
         gfx.print(self.text, 
             self.x + self.textXOffset, 
