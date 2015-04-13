@@ -91,15 +91,13 @@ local scene = {
         explosion = audio.newSource("sound/explosion.ogg", "static"),
         siren = audio.newSource("sound/air_raid_siren.ogg", "static")
     },
-
+	rainDropImg = gfx.newImage("graphics/raindrop.png"),
     levelIdx = 1,
     score = 0
 }
 
 function scene:load()
     self:loadDictionary("dictionary.txt")
-
-    local screenWidth, screenHeight = gfx.getWidth(), gfx.getHeight()
 
     self.fonts = {
         gfx.newFont("fonts/charlie_dotted.ttf", 40*scaleFactor),
@@ -158,8 +156,11 @@ function scene:reset(level)
     self:addTarget()
 end
 
-function scene:update(dt, input)
+function scene:update(dt)
     self.world:update(dt)
+	if self.powerPartSys then
+		self.powerPartSys:update(dt)
+	end
 
     if self.gameOver then
         self.gameOver:update(dt)
@@ -200,7 +201,7 @@ function scene:update(dt, input)
             end
         end
     end
-    
+
     if not turnOnSiren then
         self.audio.siren:stop()
     elseif not self.sirenOn then
@@ -280,8 +281,6 @@ function scene:addTarget()
 end
 
 function scene:draw()
-    local screenWidth, screenHeight = gfx.getWidth(), gfx.getHeight()
-
     local bg = self.level.background
     if bg then
         gfx.draw(bg, 0, 0, 0, screenWidth/bg:getWidth(), screenHeight/bg:getHeight())
@@ -292,6 +291,11 @@ function scene:draw()
     for _, tg in ipairs(self.targets) do
         tg:draw()
     end
+
+	if self.powerPartSys then
+        gfx.draw(self.powerPartSys, self.powerPartSysLoc.x, self.powerPartSysLoc.y, 0,
+		self.powerPartSysScale.x, self.powerPartSysScale.y)
+	end
 
     -- draw the ground
     --gfx.setColor(72, 160, 14)
@@ -321,8 +325,6 @@ function scene:onGameOver()
     self.level.themeMusic:stop()
     self.gameOverMusic:play()
 
-    local screenWidth, screenHeight = gfx.getWidth(), gfx.getHeight()
-
     local body = phys.newBody(self.world, screenWidth/2, 30, "dynamic")
     body:setMass(200)
     local tg = target:new{
@@ -339,7 +341,7 @@ function scene:onGameOver()
         x=screenWidth/8*2, y=screenHeight/2,
         w=200, h=40,
         color={200,255,200,255},
-        textColor={255,255,255,255},
+        textColor={0,0,255,255},
         text="New Game",
         normalImage="graphics/green_button.png",
         onClick = function() scene:reset(); gui.remove("new_game", "quit_game") end})
@@ -348,7 +350,7 @@ function scene:onGameOver()
         x=screenWidth/8*4, y=screenHeight/2,
         w=200, h=40,
         color={200,255,200,255},
-        textColor={255,255,255,255},
+        textColor={0,0,255,255},
         text="Quit",
         fontXScale=1,
         normalImage="graphics/green_button.png",
@@ -367,5 +369,52 @@ function scene.onCollision(a, b, contact)
     end
 end
 
+function scene:onPower()
+    local body = phys.newBody(self.world, screenWidth/2, 30, "dynamic")
+    body:setMass(200)
+    local tg = power:new{
+        word = {spell = "rain", hitCount = 0},
+        font = gfx.newFont(20*scaleFactor),
+        body = body,
+        speed = 3000*scaleFactor,
+		powerFunc = self.rain}
+
+    table.insert(scene.targets, tg)
+end
+
+function scene.rain()
+	local rainScale = screenWidth/2000
+    local ps = gfx.newParticleSystem(scene.rainDropImg, 5000)
+    ps:setColors({220, 220, 255, 255}, {200, 200, 255, 255}, {220, 220, 255, 32}, {32, 32, 32, 0})
+	ps:setAreaSpread("uniform", screenWidth*1.5, 0)
+    ps:setEmissionRate(500)
+    ps:setEmitterLifetime(-1)
+    ps:setInsertMode("bottom")
+    ps:setLinearAcceleration(0, 0, 0, 10000)
+    ps:setParticleLifetime(1, 3)
+    ps:setRadialAcceleration(0, 0)
+    ps:setRotation(0, math.rad(15))
+    ps:setSizeVariation(1.0)
+    ps:setSizes(1, 1, 1, 1, 0.75, 0.5, 0.25)
+    ps:setSpeed(0, 50)
+    --ps:setSpin(math.rad(0), math.rad(0))
+    ps:setSpinVariation(1)
+    ps:setSpread(math.rad(360))
+    ps:setTangentialAcceleration(0, 0)
+	scene.powerPartSys = ps
+	scene.powerPartSysLoc = {x = screenWidth/2, y = -50}
+	scene.powerPartSysScale = {x = rainScale, y = rainScale}
+	scheduler.start(scene.rainingRoutine)
+end
+
+function scene.rainingRoutine()
+	for i = 1, 50 do
+        for index, tg in ipairs(scene.targets) do
+			tg.flame = tg.flame - 1
+        end
+		scheduler:waitSeconds(0.2)
+	end
+	scene.powerPartSys = nil
+end
 
 return scene

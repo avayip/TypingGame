@@ -2,13 +2,12 @@
 Authors: Shing Yip, Ava Yip, Natalie Yip
 ]]
 
-object = require("object")
+local object = require("object")
 
 local fireImg = gfx.newImage("graphics/circle.png")
-local Target = object:new()
+local Target = object:prototype()
 
 function Target:__init()
-    local windowWidth = gfx.getWidth()
     self.running = true
     self.font = self.font or scene.fonts[math.random(1, #scene.fonts)]
     self.textWidth = self.font:getWidth(self.word.spell)
@@ -20,7 +19,7 @@ function Target:__init()
     self.flame = 0
 
     self:setShape(phys.newRectangleShape(self.textWidth, self.textHeight))
-    self:addToWorld(scene.world, math.random(10, windowWidth - 10), 10, "dynamic")
+    self:addToWorld(scene.world, math.random(10, screenWidth - 10), 10, "dynamic")
     self.body:setMass(10)
     self.fixture:setRestitution(0.5*scaleFactor)
 
@@ -49,7 +48,6 @@ function Target:__init()
 end
 
 function Target:draw()
-    local screenWidth, screenHeight = gfx.getWidth(), gfx.getHeight()
     local x, y = self.body:getWorldPoint(-self.textWidth/2, -self.textHeight/2)
     local flameScale = self.textWidth/80
     --logInfo("%s at %f,%f flameScale=%f", self.word.spell, x, y, flameScale)
@@ -112,7 +110,7 @@ function Target:inputChangeRoutine()
     end
 end
 
-function Target:framingRoutine()
+function Target:flamingRoutine()
     for i = 1, scene.maxflame do
         if self.hitCount > 0 then
             self.flame = 0
@@ -148,7 +146,7 @@ function Target:onHitGround()
     logInfo("%s hitGround", self.word.spell)
     if not self.hitGround then
         self.hitGround = true
-        scheduler.start(self.framingRoutine, self)
+        scheduler.start(self.flamingRoutine, self)
         scene.audio.explosion:stop()
         scene.audio.explosion:play()
     end

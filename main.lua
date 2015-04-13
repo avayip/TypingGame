@@ -21,6 +21,13 @@ scene = require("scene")
 scheduler = require("scheduler")
 object = require("object")
 target = require("target")
+power = require("powertarget")
+
+colors = {
+	white = {255,255,255,255}
+}
+
+screenWidth, screenHeight = gfx.getWidth(), gfx.getHeight()
 
 -- buffer for holding current player typed text
 local input = ""
@@ -28,17 +35,16 @@ local input = ""
 function love.load(arg)
     math.randomseed(os.time())
     love.keyboard.setKeyRepeat(true)
+	screenWidth, screenHeight = gfx.getWidth(), gfx.getHeight()
     scene:load()
 end
 
 function love.update(dt)
-    scene:update(dt, input:lower())
+    scene:update(dt)
     scheduler:update(dt)
 end
 
 function love.draw()
-    local screenWidth, screenHeight = gfx.getWidth(), gfx.getHeight()
-
     scene:draw()
     gui:draw()
 
@@ -55,6 +61,7 @@ function love.textinput(t)
 end
 
 function love.keypressed(key)
+	logInfo("keypressed(%s)", key)
     if key == "backspace" then
         local byteoffset = utf8.offset(input, -1)
 
@@ -70,6 +77,8 @@ function love.keypressed(key)
             end
         end
         input = ""
+	elseif key == "escape" then
+		scene:onPower()
     end
 end
 

@@ -1,5 +1,13 @@
 Object = {}
 
+function Object:prototype(o)
+    o = o or {}
+    setmetatable(o, self)
+    self.__index = self
+	self.super = self
+    return o
+end
+
 function Object:new(o)
     o = o or {}
     setmetatable(o, self)
