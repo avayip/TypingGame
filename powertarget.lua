@@ -2,7 +2,7 @@ local Target = require("target")
 
 PowerTarget = Target:prototype()
 
-local boxImg = gfx.newImage("graphics/wood.png")
+local boxImg = gfx.newImage("graphics/wooden_button.png")
 
 function PowerTarget:__init()
 	self.super.__init(self)

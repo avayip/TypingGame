@@ -93,7 +93,8 @@ local scene = {
     },
 	rainDropImg = gfx.newImage("graphics/raindrop.png"),
     levelIdx = 1,
-    score = 0
+    score = 0,
+    superPower = {}
 }
 
 function scene:load()
@@ -154,6 +155,8 @@ function scene:reset(level)
     self.targets = {}
     self:setLevel(level)
     self:addTarget()
+    
+    self.superPower = {self:newRainPower(), self:newRainPower(), self:newRainPower()}
 end
 
 function scene:update(dt)
@@ -369,17 +372,22 @@ function scene.onCollision(a, b, contact)
     end
 end
 
-function scene:onPower()
+function scene:newRainPower()
     local body = phys.newBody(self.world, screenWidth/2, 30, "dynamic")
     body:setMass(200)
-    local tg = power:new{
+    return power:new{
         word = {spell = "rain", hitCount = 0},
         font = gfx.newFont(20*scaleFactor),
         body = body,
         speed = 3000*scaleFactor,
 		powerFunc = self.rain}
+end
 
-    table.insert(scene.targets, tg)
+function scene:onPower()
+    if #self.superPower >= 1 then
+        table.insert(scene.targets, self.superPower[1])
+        table.remove(self.superPower, 1)
+    end
 end
 
 function scene.rain()
