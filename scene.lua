@@ -13,7 +13,7 @@ local scene = {
     maxflame = 5,
     levels = {
         { name = "Level 1",
-            themeMusic = audio.newSource("sound/Spiritual_Moments.mp3"),
+            themeMusic = audio.newSource("sound/Spiritual_Moments.mp3", "static"),
             background = gfx.newImage("graphics/summer-landscape-illustration.jpg"),
             wordCount = {min=1, max=3},
             wordLengthLimit = 6,
@@ -23,7 +23,7 @@ local scene = {
             flameSpreadSpeed = 5
         },
         { name = "Level 2",
-            themeMusic = audio.newSource("sound/mvrasseli_play_the_game_0.mp3"),
+            themeMusic = audio.newSource("sound/mvrasseli_play_the_game_0.mp3", "static"),
             background = gfx.newImage("graphics/summer-landscape-illustration.jpg"),
             wordCount = {min=2, max=5},
             wordLengthLimit = 8,
@@ -33,7 +33,7 @@ local scene = {
             flameSpreadSpeed = 4
         },
         { name = "Level 3",
-            themeMusic = audio.newSource("sound/epic_loop.mp3"),
+            themeMusic = audio.newSource("sound/epic_loop.mp3", "static"),
             background = gfx.newImage("graphics/summer-landscape-illustration.jpg"),
             wordCount = {min=3, max=10},
             speed = {min=5, max=12},
@@ -42,7 +42,7 @@ local scene = {
             flameSpreadSpeed = 3
         },
         { name = "Level 4",
-            themeMusic = audio.newSource("sound/Preliminary_Music.mp3"),
+            themeMusic = audio.newSource("sound/Preliminary_Music.mp3", "static"),
             background = gfx.newImage("graphics/summer-landscape-illustration.jpg"),
             wordCount = {min=4, max=15},
             speed = {min=7, max=14},
@@ -51,7 +51,7 @@ local scene = {
             flameSpreadSpeed = 2
         },
         { name = "Level 5",
-            themeMusic = audio.newSource("sound/Spiritual_Moments.mp3"),
+            themeMusic = audio.newSource("sound/Spiritual_Moments.mp3", "static"),
             background = gfx.newImage("graphics/summer-landscape-illustration.jpg"),
             wordCount = {min=5, max=20},
             speed = {min=10, max=16},
@@ -60,7 +60,7 @@ local scene = {
             flameSpreadSpeed = 2
         },
         { name = "Level 6",
-            themeMusic = audio.newSource("sound/Spiritual_Moments.mp3"),
+            themeMusic = audio.newSource("sound/Spiritual_Moments.mp3", "static"),
             background = gfx.newImage("graphics/summer-landscape-illustration.jpg"),
             wordCount = {min=10, max=35},
             speed = {min=5, max=20},
@@ -70,7 +70,7 @@ local scene = {
         },
     },
     level = nil,
-    gameOverMusic = audio.newSource("sound/Target_position.mp3"),
+    gameOverMusic = audio.newSource("sound/Target_position.mp3", "static"),
     nextDrop = 1,
     fonts = {},
     defaultFont = gfx.newFont(20*scaleFactor),
@@ -251,7 +251,7 @@ end
 
 function scene:loadDictionary(filename)
     logInfo("loading dictionary from %s", filename)
-    if love.filesystem.exists(filename) then
+    if love.filesystem.getInfo(filename) then
         for line in love.filesystem.lines(filename) do
             local word = line:gsub("%s+", "")
             if word and word ~= "" then
