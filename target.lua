@@ -26,7 +26,7 @@ function Target:__init()
     local ps = gfx.newParticleSystem(fireImg, 100)
     ps:setColors({255, 128, 32, 255}, {222, 128, 32, 255}, {128, 32, 32, 32}, {90, 12, 12, 92}, {32, 32, 32, 0})
     ps:setDirection(math.rad(90))
-    ps:setEmissionRate(500*scaleFactor)
+    ps:getEmissionArea(500*scaleFactor)
     ps:setEmitterLifetime(-1)
     ps:setInsertMode("bottom")
     ps:setLinearAcceleration(0, 0, 0, -100*scaleFactor)
@@ -54,7 +54,7 @@ function Target:draw()
 
     if self.flame >= 1 then
         local flameSpread = (self.textWidth*self.flame/scene.maxflame)/2
-        self.flamePartSys:setAreaSpread("uniform", flameSpread, 0)
+        self.flamePartSys:setEmissionArea("uniform", flameSpread, 0)
         local xx, yy =self.body:getWorldPoint(0,-self.textHeight/2)
         gfx.draw(self.flamePartSys, xx, yy, 0, flameScale, flameScale, self.body:getAngle())
     end
